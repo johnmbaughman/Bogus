@@ -25,12 +25,20 @@ namespace Bogus
       /// <param name="locale"></param>
       public DataSet(string locale = "en")
       {
+         if( !Database.LocaleResourceExists(locale) )
+            throw new BogusException(
+               $"The locale '{locale}' does not exist. To see all available locales visit {AssemblyVersionInformation.AssemblyDescription}."
+               );
+
          this.Locale = locale;
 
          this.Category = ResolveCategory(this.GetType());
       }
 
-      protected SeedNotifier<DataSet> Notifier = new SeedNotifier<DataSet>();
+      /// <summary>
+      /// See <see cref="SeedNotifier"/>
+      /// </summary>
+      protected SeedNotifier Notifier = new SeedNotifier();
 
       private Randomizer randomizer;
 
@@ -47,6 +55,11 @@ namespace Bogus
          }
       }
 
+      SeedNotifier IHasRandomizer.GetNotifier()
+      {
+         return this.Notifier;
+      }
+
       /// <summary>
       /// The category name inside the locale
       /// </summary>
@@ -61,15 +74,25 @@ namespace Bogus
       /// Returns a BSON value given a JSON path into the data set. Only simple "." dotted JSON paths are supported.
       /// </summary>
       /// <param name="path">path/key in the category</param>
-      public BValue Get(string path)
+      protected internal virtual BValue Get(string path)
       {
          return Database.Get(this.Category, path, this.Locale);
       }
 
       /// <summary>
+      /// Returns a BSON value given a JSON path into the data set. Only simple "." dotted JSON paths are supported.
+      /// </summary>
+      /// <param name="category">Overrides the category name on the dataset</param>
+      /// <param name="path">path/key in the category</param>
+      protected internal virtual BValue Get(string category, string path)
+      {
+         return Database.Get(category, path, this.Locale);
+      }
+
+      /// <summary>
       /// Determines if a key exists in the locale.
       /// </summary>
-      protected bool HasKey(string path, bool includeFallback = true)
+      protected internal virtual bool HasKey(string path, bool includeFallback = true)
       {
          if( includeFallback )
             return Database.HasKey(this.Category, path, this.Locale);
@@ -82,7 +105,7 @@ namespace Bogus
       /// </summary>
       /// <param name="path">key in the category</param>
       /// <returns></returns>
-      public BArray GetArray(string path)
+      protected internal virtual BArray GetArray(string path)
       {
          return (BArray)Get(path);
       }
@@ -91,7 +114,7 @@ namespace Bogus
       /// Returns a BSON object given a JSON path into the data set. Only simple "." dotted JSON paths are supported.
       /// </summary>
       /// <param name="path">path/key in the category</param>
-      public BObject GetObject(string path)
+      protected internal virtual BObject GetObject(string path)
       {
          return (BObject)Get(path);
       }
@@ -100,7 +123,7 @@ namespace Bogus
       /// Picks a random string inside a BSON array. Only simple "." dotted JSON paths are supported.
       /// </summary>
       /// <param name="path">key in the category</param>
-      public string GetRandomArrayItem(string path, int? min = null, int? max = null)
+      protected internal virtual string GetRandomArrayItem(string path, int? min = null, int? max = null)
       {
          var arr = GetArray(path);
          if( !arr.HasValues ) return string.Empty;
@@ -108,10 +131,20 @@ namespace Bogus
       }
 
       /// <summary>
+      /// Picks a random BObject inside an array.
+      /// </summary>
+      protected internal virtual BObject GetRandomBObject(string path)
+      {
+         var arr = GetArray(path);
+         if( !arr.HasValues ) return null;
+         return Random.ArrayElement(arr) as BObject;
+      }
+
+      /// <summary>
       /// Picks a random string inside a BSON array, then formats it. Only simple "." dotted JSON paths are supported.
       /// </summary>
       /// <param name="path">key in the category</param>
-      protected string GetFormattedValue(string path)
+      protected internal virtual string GetFormattedValue(string path)
       {
          var value = GetRandomArrayItem(path);
 
@@ -120,14 +153,15 @@ namespace Bogus
          return Random.Replace(tokenResult);
       }
 
+      private static readonly Regex parseTokensRegex = new Regex("\\#{(.*?)\\}", RegexOptions.Compiled);
+
       /// <summary>
       /// Recursive parse the tokens in the string.
       /// </summary>
       /// <param name="value">The value.</param>
       private string ParseTokens(string value)
       {
-         var regex = new Regex("\\#{(.*?)\\}");
-         var cityResult = regex.Replace(value,
+         var cityResult = parseTokensRegex.Replace(value,
             x =>
                {
                   BArray result;

@@ -95,7 +95,15 @@
     <Compile Include="GitHubIssues\Issue100.cs" />
     <Compile Include="GitHubIssues\Issue102.cs" />
     <Compile Include="GitHubIssues\Issue104.cs" />
+    <Compile Include="GitHubIssues\Issue121.cs" />
+    <Compile Include="GitHubIssues\Issue115.cs" />
+    <Compile Include="GitHubIssues\Issue114.cs" />
+    <Compile Include="GitHubIssues\Issue124.cs" />
+    <Compile Include="GitHubIssues\Issue126.cs" />
     <Compile Include="GitHubIssues\Issue13.cs" />
+    <Compile Include="GitHubIssues\Issue132.cs" />
+    <Compile Include="GitHubIssues\Issue134.cs" />
+    <Compile Include="GitHubIssues\Issue143.cs" />
     <Compile Include="GitHubIssues\Issue23.cs" />
     <Compile Include="GitHubIssues\Issue45.cs" />
     <Compile Include="GitHubIssues\Issue48.cs" />
@@ -108,6 +116,7 @@
     <Compile Include="GitHubIssues\Issue99.cs" />
     <Compile Include="GitHubIssues\Issue93.cs" />
     <Compile Include="GitHubIssues\PullRequest113.cs" />
+    <Compile Include="HandlebarsTests\ArgumentsTest.cs" />
     <Compile Include="HandleBarTests.cs" />
     <Compile Include="DataSetTests\ImageTest.cs" />
     <Compile Include="DataSetTests\InternetTests.cs" />
@@ -142,6 +151,9 @@
       <Project>{340a2fe9-5b52-4fd7-9d21-83ccf1621e09}</Project>
       <Name>Bogus</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -9,11 +9,13 @@ namespace Bogus
    /// <summary>
    /// Uses Faker to generate a person with contextually relevant fields.
    /// </summary>
-   public class Person : IHasRandomizer
+   public class Person : IHasRandomizer, IHasContext
    {
       //context variable to store state from Bogus.Extensions so, they
       //keep returning the result on each person.
       internal Dictionary<string, object> context = new Dictionary<string, object>();
+
+      Dictionary<string, object> IHasContext.Context => this.context;
 
       public class CardAddress
       {
@@ -61,7 +63,6 @@ namespace Bogus
       {
          this.DsName = this.Notifier.Flow(new Name(locale));
          this.DsInternet = this.Notifier.Flow(new Internet(locale));
-         this.DsInternet = this.Notifier.Flow(new Internet(locale));
          this.DsDate = this.Notifier.Flow(new Date {Locale = locale});
          this.DsPhoneNumbers = this.Notifier.Flow(new PhoneNumbers(locale));
          this.DsAddress = this.Notifier.Flow(new Address(locale));
@@ -73,6 +74,7 @@ namespace Bogus
          this.Gender = this.Random.Enum<Name.Gender>();
          this.FirstName = this.DsName.FirstName(this.Gender);
          this.LastName = this.DsName.LastName(this.Gender);
+         this.FullName = $"{this.FirstName} {this.LastName}";
 
          this.UserName = this.DsInternet.UserName(this.FirstName, this.LastName);
          this.Email = this.DsInternet.Email(this.FirstName, this.LastName);
@@ -104,7 +106,7 @@ namespace Bogus
             };
       }
 
-      protected SeedNotifier<DataSet> Notifier = new SeedNotifier<DataSet>();
+      protected SeedNotifier Notifier = new SeedNotifier();
 
       private Randomizer randomizer;
 
@@ -118,9 +120,15 @@ namespace Bogus
          }
       }
 
+      SeedNotifier IHasRandomizer.GetNotifier()
+      {
+         return this.Notifier;
+      }
+
       public Name.Gender Gender;
       public string FirstName;
       public string LastName;
+      public string FullName;
       public string UserName;
       public string Avatar;
       public string Email;

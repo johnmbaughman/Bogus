@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using Bogus.Bson;
@@ -27,10 +25,37 @@ namespace Bogus
       {
          var asm = typeof(Database).GetAssembly();
 
+         var parts = ResourceNameFormat.Split(new[] {"{0}"}, StringSplitOptions.None);
+
+         var prefix = parts[0];
+         var suffix = parts[1];
+
          return asm.GetManifestResourceNames()
-            .Where(name => name.EndsWith(".locale.bson"))
-            .Select(name => name.Replace("Bogus.data.", "").Replace(".locale.bson", ""))
+            .Where(name => name.EndsWith(suffix))
+            .Select(name => name.Replace(prefix, "").Replace(suffix, ""))
             .ToArray();
+      }
+
+      /// <summary>
+      /// Checks if a locale exists in Bogus.
+      /// </summary>
+      public static bool LocaleResourceExists(string locale)
+      {
+         var asm = typeof(Database).GetAssembly();
+
+         var resourceName = GetLocaleResourceName(locale);
+
+         return ResourceHelper.ResourceExists(asm, resourceName);
+      }
+
+      /// <summary>
+      /// Format of locale resource names.
+      /// </summary>
+      public const string ResourceNameFormat = "Bogus.data.{0}.locale.bson";
+
+      private static string GetLocaleResourceName(string locale)
+      {
+         return string.Format(ResourceNameFormat, locale);
       }
 
       /// <summary>
@@ -40,23 +65,16 @@ namespace Bogus
       {
          //Just lazy load English only.
          var d = new ConcurrentDictionary<string, BObject>();
-         d.TryAdd("en", InitLocale("en"));
+         d.TryAdd("en", DeserializeLocale("en"));
          return d;
       }
 
-
-      internal static BObject InitLocale(string locale)
+      internal static BObject DeserializeLocale(string locale)
       {
          var asm = typeof(Database).GetAssembly();
-         var resourceName = $"Bogus.data.{locale}.locale.bson";
+         var resourceName = GetLocaleResourceName(locale);
 
-         using( var s = asm.GetManifestResourceStream(resourceName) )
-         using( var ms = new MemoryStream() )
-         {
-            s.CopyTo(ms);
-
-            return Bson.Bson.Load(ms.ToArray());
-         }
+         return ResourceHelper.ReadBObjectResource(asm, resourceName);
       }
 
       /// <summary>
@@ -67,7 +85,7 @@ namespace Bogus
       {
          if( !Data.Value.TryGetValue(locale, out BObject l) )
          {
-            l = InitLocale(locale);
+            l = DeserializeLocale(locale);
             Data.Value.TryAdd(locale, l);
          }
 
@@ -80,7 +98,7 @@ namespace Bogus
       /// </summary>
       public static void ResetLocale(string locale)
       {
-         Data.Value[locale] = InitLocale(locale);
+         Data.Value[locale] = DeserializeLocale(locale);
       }
 
       /// <summary>

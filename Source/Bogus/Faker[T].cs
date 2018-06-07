@@ -8,10 +8,38 @@ using System.Text;
 namespace Bogus
 {
    /// <summary>
-   /// Generates fake objects of T.
+   /// Hidden API implemented explicitly on <see cref="Faker{T}"/>. When <see cref="Faker{T}"/> is casted explicitly to <see cref="IFakerTInternal"/>, 
+   /// the cast reveals some protected internal objects of <see cref="Faker{T}"/> without needing to derive
+   /// from <see cref="Faker{T}"/>. This is useful for extensions methods that need access internal variables of <see cref="Faker{T}"/> like <see cref="Faker"/>, <see cref="IBinder"/>, <see cref="LocalSeed"/>, and type of T.
+   /// </summary>
+   public interface IFakerTInternal
+   {
+      /// <summary>
+      /// The internal FakerHub object that is used in f => f rules. Usually used to gain access to a source of randomness by extension methods.
+      /// </summary>
+      Faker FakerHub { get; }
+
+      /// <summary>
+      /// The field/property binder used by <see cref="Faker{T}"/>.
+      /// </summary>
+      IBinder Binder { get; }
+
+      /// <summary>
+      /// The local seed of <see cref="Faker{T}"/> if available. Null local seed means the Global <see cref="Randomizer.Seed"/> property is being used.
+      /// </summary>
+      int? LocalSeed { get; }
+
+      /// <summary>
+      /// The type of T in <see cref="Faker{T}"/>.
+      /// </summary>
+      Type TypeOfT { get; }
+   }
+
+   /// <summary>
+   /// Generates fake objects of <typeparamref name="T"/>.
    /// </summary>
    /// <typeparam name="T">The object to fake.</typeparam>
-   public class Faker<T> : ILocaleAware, IRuleSet<T> where T : class
+   public class Faker<T> : IFakerTInternal, ILocaleAware, IRuleSet<T> where T : class
    {
 #pragma warning disable 1591
       protected const string Default = "default";
@@ -24,7 +52,6 @@ namespace Bogus
 
       protected internal readonly Dictionary<string, FinalizeAction<T>> FinalizeActions = new Dictionary<string, FinalizeAction<T>>(StringComparer.OrdinalIgnoreCase);
       protected internal Dictionary<string, Func<Faker, T>> CreateActions = new Dictionary<string, Func<Faker, T>>(StringComparer.OrdinalIgnoreCase);
-      protected internal readonly MultiSetDictionary<string, string> Ignores = new MultiSetDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
       protected internal readonly Dictionary<string, MemberInfo> TypeProperties;
       protected internal Dictionary<string, bool> StrictModes = new Dictionary<string, bool>();
       protected internal bool? IsValid;
@@ -32,10 +59,18 @@ namespace Bogus
       protected internal int? localSeed; // if null, the global Randomizer.Seed is used.
 #pragma warning restore 1591
 
+      Faker IFakerTInternal.FakerHub => this.FakerHub;
+
+      IBinder IFakerTInternal.Binder => this.binder;
+
+      int? IFakerTInternal.LocalSeed => this.localSeed;
+
+      Type IFakerTInternal.TypeOfT => typeof(T);
+
       /// <summary>
-      /// Clones the internal state of a Faker[T] into a new Faker[T] so that
+      /// Clones the internal state of a <seealso cref="Faker{T}"/> into a new <seealso cref="Faker{T}"/> so that
       /// both are isolated from each other. The clone will have internal state
-      /// reset as if .Generate() was never
+      /// reset as if <seealso cref="Generate(string)"/> was never called.
       /// </summary>
       public Faker<T> Clone()
       {
@@ -46,15 +81,6 @@ namespace Bogus
          foreach( var root in this.StrictModes )
          {
             clone.StrictModes.Add(root.Key, root.Value);
-         }
-
-         //ignores
-         foreach( var root in this.Ignores )
-         {
-            foreach( var str in root.Value )
-            {
-               clone.Ignores.Add(root.Key, str);
-            }
          }
 
          //create actions
@@ -119,10 +145,10 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Creates a seed locally scoped within this Faker[T] ignoring the globally scoped Randomzier.Seed.
-      /// If this method is never called the global Randomizer.Seed is used.
+      /// Creates a seed locally scoped within this <seealso cref="Faker{T}"/> ignoring the globally scoped <seealso cref="Randomizer.Seed"/>.
+      /// If this method is never called the global <seealso cref="Randomizer.Seed"/> is used.
       /// </summary>
-      /// <para name="seed">The seed value to use within this Faker[T] instance.</para>
+      /// <param name="seed">The seed value to use within this <seealso cref="Faker{T}"/> instance.</param>
       public virtual Faker<T> UseSeed(int seed)
       {
          this.localSeed = seed;
@@ -131,7 +157,8 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Uses the factory method to generate new instances.
+      /// Instructs <seealso cref="Faker{T}"/> to use the factory method as a source
+      /// for new instances of <typeparamref name="T"/>.
       /// </summary>
       public virtual Faker<T> CustomInstantiator(Func<Faker, T> factoryMethod)
       {
@@ -195,9 +222,10 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Gives you a way to specify multiple rules inside an action
-      /// without having to call RuleFor multiple times. Note: StrictMode
-      /// must be false since property rules cannot be individually checked.
+      /// Specify multiple rules inside an action without having to call
+      /// RuleFor multiple times. Note: <seealso cref="StrictMode"/> must be false
+      /// since rules for properties and fields cannot be individually checked when
+      /// using this method.
       /// </summary>
       public virtual Faker<T> Rules(Action<Faker, T> setActions)
       {
@@ -236,7 +264,10 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Creates a rule for a type on a class
+      /// Creates one rule for all types of <typeparamref name="TType"/> on type <typeparamref name="T"/>.
+      /// In other words, if you have <typeparamref name="T"/> with many fields or properties of
+      /// type <seealso cref="Int32"/> this method allows you to specify a rule for all fields or
+      /// properties of type <seealso cref="Int32"/>.
       /// </summary>
       public virtual Faker<T> RuleForType<TType>(Type type, Func<Faker, TType> setterForType)
       {
@@ -276,9 +307,11 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Create a rule set that can be executed in specialized cases.
+      /// Defines a set of rules under a specific name. Useful for defining
+      /// rules for special cases. Note: The name `default` is the name of all rules that are
+      /// defined without an explicit rule set.
       /// </summary>
-      /// <param name="ruleSetName">The rule set name</param>
+      /// <param name="ruleSetName">The rule set name.</param>
       /// <param name="action">The set of rules to apply when this rules set is specified.</param>
       public virtual Faker<T> RuleSet(string ruleSetName, Action<IRuleSet<T>> action)
       {
@@ -290,11 +323,10 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Ignore a property or field when using StrictMode.
+      /// Ignores a property or field when <seealso cref="StrictMode"/> is enabled.
       /// </summary>
       /// <typeparam name="TPropertyOrField"></typeparam>
       /// <param name="propertyOrField"></param>
-      /// <returns></returns>
       public virtual Faker<T> Ignore<TPropertyOrField>(Expression<Func<T, TPropertyOrField>> propertyOrField)
       {
          var propNameOrField = PropertyName.For(propertyOrField);
@@ -304,16 +336,25 @@ namespace Bogus
             throw new ArgumentException(
                $"The property or field {propNameOrField} was not found on {typeof(T)} during the binding discovery of T. Can't ignore something that doesn't exist.");
          }
-         this.Ignores.Add(currentRuleSet, propNameOrField);
+
+         var rule = new PopulateAction<T>
+            {
+               Action = null,
+               RuleSet = currentRuleSet,
+               PropertyName = propNameOrField
+            };
+
+         this.Actions.Add(currentRuleSet, propNameOrField, rule);
 
          return this;
       }
-
+      
       /// <summary>
-      /// Ensures all properties of T have rules.
+      /// When set to true, ensures all properties and public fields of <typeparamref name="T"/> have rules
+      /// before an object of <typeparamref name="T"/> is populated or generated. Manual assertion
+      /// can be invoked using <seealso cref="Validate"/> and <seealso cref="AssertConfigurationIsValid"/>.
       /// </summary>
-      /// <param name="ensureRulesForAllProperties">Overrides any global setting in Faker.DefaultStrictMode</param>
-      /// <returns></returns>
+      /// <param name="ensureRulesForAllProperties">Overrides any global setting in <seealso cref="Faker.DefaultStrictMode"/>.</param>
       public virtual Faker<T> StrictMode(bool ensureRulesForAllProperties)
       {
          this.StrictModes[currentRuleSet] = ensureRulesForAllProperties;
@@ -321,7 +362,8 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Action is invoked after all the rules are applied.
+      /// A finalizing action rule applied to <typeparamref name="T"/> after all the rules
+      /// are executed.
       /// </summary>
       public virtual Faker<T> FinishWith(Action<Faker, T> action)
       {
@@ -330,7 +372,7 @@ namespace Bogus
                Action = action,
                RuleSet = currentRuleSet
             };
-         this.FinalizeActions.Add(currentRuleSet, rule);
+         this.FinalizeActions[currentRuleSet] = rule;
          return this;
       }
 
@@ -347,9 +389,16 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Generates a fake object of T.
+      /// Generates a fake object of <typeparamref name="T"/> using the specified rules in this
+      /// <seealso cref="Faker{T}"/>.
       /// </summary>
-      /// <returns></returns>
+      /// <param name="ruleSets">A comma separated list of rule sets to execute.
+      /// Note: The name `default` is the name of all rules defined without an explicit rule set.
+      /// When a custom rule set name is provided in <paramref name="ruleSets"/> as parameter,
+      /// the `default` rules will not run. If you want rules without an explicit rule set to run
+      /// you'll need to include the `default` rule set name in the comma separated
+      /// list of rules to run. (ex: "rulesetA, rulesetB, default")
+      /// </param>
       public virtual T Generate(string ruleSets = null)
       {
          Func<Faker, T> createRule = null;
@@ -364,6 +413,12 @@ namespace Bogus
             var firstRule = cleanRules[0];
             createRule = CreateActions.TryGetValue(firstRule, out createRule) ? createRule : CreateActions[Default];
          }
+
+         //Issue 143 - We need a new FakerHub context before calling the
+         //            constructor. Associated Issue 57: Again, before any
+         //            rules execute, we need a context to capture IndexGlobal
+         //            and IndexFaker variables.
+         FakerHub.NewContext();
          var instance = createRule(this.FakerHub);
 
          PopulateInternal(instance, cleanRules);
@@ -372,9 +427,18 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Generates multiple fake objects of T.
+      /// Generates a <seealso cref="List{T}"/> fake objects of type <typeparamref name="T"/> using the specified rules in
+      /// this <seealso cref="Faker{T}"/>.
       /// </summary>
-      public virtual IList<T> Generate(int count, string ruleSets = null)
+      /// <param name="count">The number of items to create in the <seealso cref="List{T}"/>.</param>
+      /// <param name="ruleSets">A comma separated list of rule sets to execute.
+      /// Note: The name `default` is the name of all rules defined without an explicit rule set.
+      /// When a custom rule set name is provided in <paramref name="ruleSets"/> as parameter,
+      /// the `default` rules will not run. If you want rules without an explicit rule set to run
+      /// you'll need to include the `default` rule set name in the comma separated
+      /// list of rules to run. (ex: "rulesetA, rulesetB, default")
+      /// </param>
+      public virtual List<T> Generate(int count, string ruleSets = null)
       {
          return Enumerable.Range(1, count)
             .Select(i => Generate(ruleSets))
@@ -382,9 +446,17 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Returns an IEnumerable[T] with LINQ deferred execution. Generated values
-      /// are not guaranteed to be repeatable until .ToList() is called.
+      /// Returns an <seealso cref="IEnumerable{T}"/> with LINQ deferred execution. Generated values
+      /// are not guaranteed to be repeatable until <seealso cref="Enumerable.ToList{T}"/> is called.
       /// </summary>
+      /// <param name="count">The number of items to create in the <seealso cref="IEnumerable{T}"/>.</param>
+      /// <param name="ruleSets">A comma separated list of rule sets to execute.
+      /// Note: The name `default` is the name of all rules defined without an explicit rule set.
+      /// When a custom rule set name is provided in <paramref name="ruleSets"/> as parameter,
+      /// the `default` rules will not run. If you want rules without an explicit rule set to run
+      /// you'll need to include the `default` rule set name in the comma separated
+      /// list of rules to run. (ex: "rulesetA, rulesetB, default")
+      /// </param>
       public virtual IEnumerable<T> GenerateLazy(int count, string ruleSets = null)
       {
          return Enumerable.Range(1, count)
@@ -397,6 +469,13 @@ namespace Bogus
       /// amounts of data in a memory efficient way. Generated values *should* be repeatable
       /// for a given seed when starting with the first item in the sequence.
       /// </summary>
+      /// <param name="ruleSets">A comma separated list of rule sets to execute.
+      /// Note: The name `default` is the name of all rules defined without an explicit rule set.
+      /// When a custom rule set name is provided in <paramref name="ruleSets"/> as parameter,
+      /// the `default` rules will not run. If you want rules without an explicit rule set to run
+      /// you'll need to include the `default` rule set name in the comma separated
+      /// list of rules to run. (ex: "rulesetA, rulesetB, default")
+      /// </param>
       public virtual IEnumerable<T> GenerateForever(string ruleSets = null)
       {
          while( true )
@@ -406,8 +485,17 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Only populates an instance of T.
+      /// Populates an instance of <typeparamref name="T"/> according to the rules
+      /// defined in this <seealso cref="Faker{T}"/>.
       /// </summary>
+      /// <param name="instance">The instance of <typeparamref name="T"/> to populate.</param>
+      /// <param name="ruleSets">A comma separated list of rule sets to execute.
+      /// Note: The name `default` is the name of all rules defined without an explicit rule set.
+      /// When a custom rule set name is provided in <paramref name="ruleSets"/> as parameter,
+      /// the `default` rules will not run. If you want rules without an explicit rule set to run
+      /// you'll need to include the `default` rule set name in the comma separated
+      /// list of rules to run. (ex: "rulesetA, rulesetB, default")
+      /// </param>
       public virtual void Populate(T instance, string ruleSets = null)
       {
          var cleanRules = ParseDirtyRulesSets(ruleSets);
@@ -415,8 +503,17 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Given an instance of T, populate it with the desired rule sets.
+      /// Populates an instance of <typeparamref name="T"/> according to the rules
+      /// defined in this <seealso cref="Faker{T}"/>.
       /// </summary>
+      /// <param name="instance">The instance of <typeparamref name="T"/> to populate.</param>
+      /// <param name="ruleSets">A comma separated list of rule sets to execute.
+      /// Note: The name `default` is the name of all rules defined without an explicit rule set.
+      /// When a custom rule set name is provided in <paramref name="ruleSets"/> as parameter,
+      /// the `default` rules will not run. If you want rules without an explicit rule set to run
+      /// you'll need to include the `default` rule set name in the comma separated
+      /// list of rules to run. (ex: "rulesetA, rulesetB, default")
+      /// </param>
       protected virtual void PopulateInternal(T instance, string[] ruleSets)
       {
          ValidationResult vr = null;
@@ -436,8 +533,11 @@ namespace Bogus
          lock( Randomizer.Locker.Value )
          {
             //Issue 57 - Make sure you generate a new context
-            //before executing any rules.
-            FakerHub.NewContext();
+            //           before executing any rules.
+            //Issue 143 - If the FakerHub doesn't have any context
+            //            (eg NewContext() has never been called), then call it
+            //            so we can increment IndexGlobal and IndexFaker.
+            if( !this.FakerHub.HasContext ) FakerHub.NewContext();
 
             foreach( var ruleSet in ruleSets )
             {
@@ -447,6 +547,7 @@ namespace Bogus
                   {
                      typeProps.TryGetValue(action.PropertyName, out MemberInfo member);
                      var valueFactory = action.Action;
+                     if( valueFactory is null ) continue; // An .Ignore() rule.
 
                      if( member != null )
                      {
@@ -476,9 +577,12 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Checks if all properties have rules.
+      /// When <seealso cref="StrictMode"/> is enabled, checks if all properties or fields of <typeparamref name="T"/> have
+      /// rules defined. Returns true if all rules are defined, false otherwise.
+      /// The difference between <seealso cref="Validate"/> and <seealso cref="AssertConfigurationIsValid"/>
+      /// is that <seealso cref="Validate"/> will *not* throw <seealso cref="ValidationException"/>
+      /// if some rules are missing when <seealso cref="StrictMode"/> is enabled.
       /// </summary>
-      /// <param name="ruleSets"></param>
       /// <returns>True if validation passes, false otherwise.</returns>
       public virtual bool Validate(string ruleSets = null)
       {
@@ -490,8 +594,13 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Asserts that all properties have rules. When StrictMode is enabled, an exception will be raised
-      /// with complete list of missing rules. Useful in unit tests for fast forward fixing of missing rules.
+      /// Asserts that all properties have rules. When <seealso cref="StrictMode"/> is enabled, an exception will be raised
+      /// with complete list of missing rules. Useful in unit tests to catch missing rules at development
+      /// time. The difference between <seealso cref="Validate"/> and <seealso cref="AssertConfigurationIsValid"/>
+      /// is that <seealso cref="AssertConfigurationIsValid"/> will throw <seealso cref="ValidationException"/>
+      /// if some rules are missing when <seealso cref="StrictMode"/> is enabled. <seealso cref="Validate"/>
+      /// will not throw an exception and will return <seealso cref="bool"/> true or false accordingly if
+      /// rules are missing when <seealso cref="StrictMode"/> is enabled.
       /// </summary>
       /// <exception cref="ValidationException"/>
       public virtual void AssertConfigurationIsValid(string ruleSets = null)
@@ -552,18 +661,10 @@ namespace Bogus
             //If strictMode is not enabled, skip and move on to the next ruleSet.
             if( !strictMode ) continue;
 
-            //Otherwise, we need to take a diff of what the user
-            //specified and what the Binder found reflecting over
-            //type T.
-            this.Ignores.TryGetValue(rule, out HashSet<string> ignores);
-
             this.Actions.TryGetValue(rule, out var populateActions);
 
             var userSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            if( ignores != null )
-            {
-               userSet.UnionWith(ignores);
-            }
+
             if( populateActions != null )
             {
                userSet.UnionWith(populateActions.Keys);
@@ -604,7 +705,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Provides implicit type conversion from Faker[T] to T. IE: Order testOrder = faker;
+      /// Provides implicit type conversion from <seealso cref="Faker{T}"/> to <typeparamref name="T"/>. IE: Order testOrder = faker;
       /// </summary>
       public static implicit operator T(Faker<T> faker)
       {

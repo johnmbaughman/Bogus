@@ -15,7 +15,7 @@ and inspired by [`FluentValidation`](https://github.com/JeremySkinner/FluentVali
 ### Download & Install
 **Nuget Package [Bogus](https://www.nuget.org/packages/Bogus/)**
 
-```
+```powershell
 Install-Package Bogus
 ```
 Minimum Requirements: **.NET Standard 1.3** or **.NET Framework 4.0**.
@@ -23,23 +23,26 @@ Minimum Requirements: **.NET Standard 1.3** or **.NET Framework 4.0**.
 ##### Projects That Use Bogus
 
 * [**Elasticsearch .NET Client (NEST)**](https://github.com/elastic/elasticsearch-net) [[code]](https://github.com/elastic/elasticsearch-net/tree/82c938893b2ff4ddca03a8e977ad14a16da712ba/src/Tests/Framework/MockData)
-* [**RethinkDb.Driver**](https://github.com/bchavez/RethinkDb.Driver) - A RethinkDB database driver.
+* [**Windows-XAML / Template10**](https://github.com/Windows-XAML/Template10) [[code]](https://github.com/Windows-XAML/Template10/blob/beed5e58a4f8ab381cff6f063d2a91db5b4fc3bc/Basics/PrismSample/Services/DataService.cs#L1)
+* [**Microsoft Learning / Developing Microsoft Azure Solutions**](https://github.com/MicrosoftLearning/20532-DevelopingMicrosoftAzureSolutions) [[code]](https://github.com/MicrosoftLearning/20532-DevelopingMicrosoftAzureSolutions/blob/4bb595f6b908798f8b3d49773455699102650806/Allfiles/Mod03/Labfiles/Starter/Contoso.Events.Data/ContextInitializer.cs)
 
 ##### Featured In
+* [**Microsoft Build 2018 - Azure Tips and Tricks - May 8th, 2018**](https://www.youtube.com/watch?v=088e5IUqF6g&t=12m31s)
+* **NuGet Must Haves - [Top 10 Unit Testing Libraries in 2017](http://nugetmusthaves.com/article/top-unit-testing-libraries)**
 * **[.NET Rocks Podcast - #BetterKnowThatFramework - March 16th 2017](https://twitter.com/bchavez/status/842479138850070528)**
 * **[.NET Engineering Blog: NuGet Package of the week #1. - "This week in .NET - December 8th 2015"](https://blogs.msdn.microsoft.com/dotnet/2015/12/08/the-week-in-net-12082015/)**
 
 ##### Blog Posts
 * [Jack Histon](https://twitter.com/jackhiston) - [How to Create Bogus Data in C#](http://jackhiston.com/2017/10/1/how-to-create-bogus-data-in-c/)
+* [Christos Matskas](https://twitter.com/christosmatskas) - [Creating .NET fakes using Bogus](https://cmatskas.com/creating-net-fakes-using-bogus-2/)
 * Mark Timmings - [Auto generating test data with Bogus](http://putridparrot.com/blog/auto-generating-test-data-with-bogus/)
 * [.NET Core Generating Test Data](https://coderulez.wordpress.com/2017/05/10/net-core-generating-test-data/)
 * Steve Leigh - [Seedy Fake Users](http://stevesspace.com/2017/01/seedy-fake-users/)
 * Dominik Roszkowski - [Bogus fake data generator in .Net testing](http://dominikroszkowski.pl/2017/07/bogus-in-testing/)
+* [Jared Nance](https://twitter.com/jaredcnance) - [Leveling Up Your .Net Testing Patterns](http://nance.io/leveling-up-your-dotnet-testing/)
 
-##### Tip Jar
-* :dollar: **Bitcoin**: `1ApWWgMjnT9pWx9jnQfwim8jPtrqDimxBh`
-* :pound: **Litecoin**: `LZgWtUgKeHfHiPdyqcYfpNjiSFEpSWCBuL`
-* :euro: **Ethereum**: `0xa0cE2692355135Cc7fcb89d3D213be4A0512A73c`
+##### The Crypto Tip Jar!
+<a href="https://commerce.coinbase.com/checkout/2faa393a-6fc3-4365-993a-6cc110bc4d35"><img src="https://raw.githubusercontent.com/bchavez/Bogus/master/Docs/tipjar.png" /></a>
 * :dog2: **Dogecoin**: `D6Y9oaf963cgcjp6AgD6sDWWLTXGGYx9r2`
 
 
@@ -77,17 +80,18 @@ var testUsers = new Faker<User>()
     //Optional: Call for objects that have complex initialization
     .CustomInstantiator(f => new User(userIds++, f.Random.Replace("###-##-####")))
 
+    //Use an enum outside scope.
+    .RuleFor(u => u.Gender, f => f.PickRandom<Gender>())
+
     //Basic rules using built-in generators
-    .RuleFor(u => u.FirstName, f => f.Name.FirstName())
-    .RuleFor(u => u.LastName, f => f.Name.LastName())
+    .RuleFor(u => u.FirstName, (f, u) => f.Name.FirstName(u.Gender))
+    .RuleFor(u => u.LastName, (f, u) => f.Name.LastName(u.Gender))
     .RuleFor(u => u.Avatar, f => f.Internet.Avatar())
     .RuleFor(u => u.UserName, (f, u) => f.Internet.UserName(u.FirstName, u.LastName))
     .RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.FirstName, u.LastName))
     .RuleFor(u => u.SomethingUnique, f => $"Value {f.UniqueIndex}")
-    .RuleFor(u => u.SomeGuid, Guid.NewGuid)
+    .RuleFor(u => u.SomeGuid, f => Guid.NewGuid)
 
-    //Use an enum outside scope.
-    .RuleFor(u => u.Gender, f => f.PickRandom<Gender>())
     //Use a method outside scope.
     .RuleFor(u => u.CartId, f => Guid.NewGuid())
     //Compound property with context, use the first/last name properties
@@ -232,13 +236,13 @@ public void Or_Using_DataSets_Directly()
 	* `CityPrefix` - Get a city prefix.
 	* `CitySuffix` - Get a city suffix.
 	* `StreetName` - Get a street name.
-	* `BuildingNumber` - Get a building number
+	* `BuildingNumber` - Get a building number.
 	* `StreetSuffix` - Get a street suffix.
 	* `SecondaryAddress` - Get a secondary address like 'Apt. 2' or 'Suite 321'.
 	* `County` - Get a county.
 	* `Country` - Get a country.
 	* `FullAddress` - Get a full address like Street, City, Country.
-	* `CountryCode` - Get a random country code.
+	* `CountryCode` - Get a random ISO 3166-1 country code.
 	* `State` - Get a state.
 	* `StateAbbr` - Get a state abbreviation.
 	* `Latitude` - Get a Latitude
@@ -249,7 +253,7 @@ public void Or_Using_DataSets_Directly()
 * **`Commerce`**
 	* `Department` - Get a random commerce department.
 	* `Price` - Get a random product price.
-	* `Categories` - Get random product categories
+	* `Categories` - Get random product categories.
 	* `ProductName` - Get a random product name.
 	* `Color` - Get a random color.
 	* `Product` - Get a random product.
@@ -282,8 +286,8 @@ public void Or_Using_DataSets_Directly()
 	* `Currency` - Get a random currency.
 	* `CreditCardNumber` - Generate a random credit card number with valid Luhn checksum.
 	* `CreditCardCvv` - Generate a credit card CVV
-	* `BitcoinAddress` - Generates a random bitcoin address
-	* `EthereumAddress` - Generate a random ethereum address
+	* `BitcoinAddress` - Generates a random Bitcoin address.
+	* `EthereumAddress` - Generate a random Ethereum address.
 	* `RoutingNumber` - Generates an ABA routing number with valid check digit.
 	* `Bic` - Generates Bank Identifier Code (BIC) code.
 	* `Iban` - Generates an International Bank Account Number (IBAN).
@@ -313,7 +317,7 @@ public void Or_Using_DataSets_Directly()
 * **`Internet`**
 	* `Avatar` - Generates a legit Internet URL avatar from twitter accounts.
 	* `Email` - Generates an email address.
-	* `ExampleEmail` - Generates an example email with @example.com
+	* `ExampleEmail` - Generates an example email with @example.com.
 	* `UserName` - Generates user names.
 	* `DomainName` - Generates a random domain name.
 	* `DomainWord` - Generates a domain word used for domain names.
@@ -321,9 +325,9 @@ public void Or_Using_DataSets_Directly()
 	* `Ip` - Gets a random IP address.
 	* `Ipv6` - Generates a random IPv6 address.
 	* `UserAgent` - Generates a random user agent.
-	* `Mac` - Gets a random mac address
+	* `Mac` - Gets a random mac address.
 	* `Password` - Generates a random password.
-	* `Color` - Gets a random aesthetically pleasing color near the base R,G.B. See [here](http://stackoverflow.com/questions/43044/algorithm-to-randomly-generate-an-aesthetically-pleasing-color-palette).
+	* `Color` - Gets a random aesthetically pleasing color near the base RGB. See [here](http://stackoverflow.com/questions/43044/algorithm-to-randomly-generate-an-aesthetically-pleasing-color-palette).
 	* `Protocol` - Returns a random protocol. HTTP or HTTPS.
 	* `Url` - Generates a random URL.
 	* `UrlWithPath` - Get a random URL with random path.
@@ -332,19 +336,19 @@ public void Or_Using_DataSets_Directly()
 	* `Words` - Get some lorem words
 	* `Letter` - Get a character letter.
 	* `Sentence` - Get a random sentence of specific number of words.
-	* `Slug` - Slugify lorem words.
 	* `Sentences` - Get some sentences.
 	* `Paragraph` - Get a paragraph.
-	* `Paragraphs` - Get some paragraphs with tabs n all.
+	* `Paragraphs` - Get a specified number of paragraphs.
 	* `Text` - Get random text on a random lorem methods.
-	* `Lines` - Get lines of lorem
+	* `Lines` - Get lines of lorem.
+	* `Slug` - Slugify lorem words.
 * **`Name`**
 	* `FirstName` - Get a first name. Getting a gender specific name is only supported on locales that support it.
-	* `LastName` - Get a first name. Getting a gender specific name is only supported on locales that support it.
+	* `LastName` - Get a last name. Getting a gender specific name is only supported on locales that support it.
 	* `FullName` - Get a full name, concatenation of calling FirstName and LastName.
-	* `Prefix` - Gets a random prefix for a name
-	* `Suffix` - Gets a random suffix for a name
-	* `FindName` - Gets a full name
+	* `Prefix` - Gets a random prefix for a name.
+	* `Suffix` - Gets a random suffix for a name.
+	* `FindName` - Gets a full name.
 	* `JobTitle` - Gets a random job title.
 	* `JobDescriptor` - Get a job description.
 	* `JobArea` - Get a job area expertise.
@@ -356,17 +360,20 @@ public void Or_Using_DataSets_Directly()
 	* `Review` - Generates a random user review.
 	* `Reviews` - Generate an array of random reviews.
 * **`System`**
-	* `FileName` - Get a random file name
-	* `DirectoryPath` - Get a random directory path (Unix)
-	* `FilePath` - Get a random file path (Unix)
+	* `FileName` - Get a random file name.
+	* `DirectoryPath` - Get a random directory path (Unix).
+	* `FilePath` - Get a random file path (Unix).
 	* `MimeType` - Get a random mime type
-	* `CommonFileType` - Returns a commonly used file type
-	* `CommonFileExt` - Returns a commonly used file extension
-	* `FileType` - Returns any file type available as mime-type
+	* `CommonFileType` - Returns a commonly used file type.
+	* `CommonFileExt` - Returns a commonly used file extension.
+	* `FileType` - Returns any file type available as mime-type.
 	* `FileExt` - Gets a random extension for the given mime type.
 	* `Semver` - Get a random semver version string.
-	* `Version` - Get a random `System.Version`
+	* `Version` - Get a random `System.Version`.
 	* `Exception` - Get a random `Exception` with a fake stack trace.
+	* `AndroidId` - Get a random GCM registration ID.
+	* `ApplePushToken` - Get a random Apple Push Token
+	* `BlackBerryPin` - Get a random BlackBerry Device PIN
 
 #### API Extension Methods
 * **`using Bogus.Extensions.Brazil;`**
@@ -382,7 +389,7 @@ public void Or_Using_DataSets_Directly()
 	* `Bogus.Person.CodiceFiscale()` - Codice Fiscale
 	* `Bogus.DataSets.Finance.CodiceFiscale()` - Codice Fiscale
 * **`using Bogus.Extensions.UnitedKingdom;`**
-	* `Bogus.DataSets.Finance.ShortCode()` - Banking Short Code
+	* `Bogus.DataSets.Finance.SortCode()` - Banking Sort Code
 * **`using Bogus.Extensions.UnitedStates;`**
 	* `Bogus.Person.Ssn()` - Social Security Number
 
@@ -469,6 +476,23 @@ public void Handlebar()
 "Roob, Michale PhD"
 */
 ```
+The name of a dataset is determined using `DataCategory` attribute or class name otherwise. (i.e `PhoneNumber` dataset in handlebars expression should be named as `phone_number`)
+
+You can pass parameters to methods using braces:
+
+```csharp
+[Test]
+public void HandlebarWithParameters()
+{
+    var faker = new Faker();
+    var randomName = faker.Parse("{{name.firstname(Female)}}, {{name.firstname(Male)}}");
+    randomName.Dump();
+}
+
+/* OUTPUT:
+"Lindsay, Jonathan"
+*/
+```
 
 #### Implicit and Explicit Type Conversion
 You can also use implicit type conversion to make your code look cleaner without having to explicitly call `Faker<T>.Generate()`.
@@ -521,10 +545,65 @@ public void create_rules_for_an_object_the_easy_way()
 
 F# and VB.NET Examples
 ----------------------
-#### The Fabulous F# Example
-```
-open Bogus
+#### The Fabulous F# Examples
+* Using the `Faker` facade with immutable **F#** record types:
 
+```fsharp
+type Customer = { FirstName : string
+                  LastName : string
+                  Age : int
+                  Title : string }
+
+//The faker facade
+let f = Faker();
+
+let generator() = 
+   { FirstName = f.Name.FirstName()
+     LastName  = f.Name.LastName()
+     Age       = f.Random.Number(18,60)
+     Title     = f.Name.JobTitle() }
+     
+generator() |> Dump |> ignore
+
+(* OUTPUT:
+  FirstName = "Russell"
+  LastName = "Nader"
+  Age = 34
+  Title = "Senior Web Officer"
+*)
+```
+
+* Using the `Faker<T>` class with immutable **F#** record types:
+
+```fsharp
+type Customer = { FirstName : string
+                  LastName : string
+                  Age : int
+                  Title : string }
+
+let customerFaker =
+    Bogus
+        .Faker<Customer>()
+        .CustomInstantiator(fun f ->
+             { FirstName = f.Name.FirstName()
+               LastName  = f.Name.LastName()
+               Age       = f.Random.Number(18,60)
+               Title     = f.Name.JobTitle() })
+
+customerFaker.Generate() |> Dump |> ignore
+
+(* OUTPUT:
+  FirstName = "Sasha"
+  LastName = "Roberts"
+  Age = 20;
+  Title = "Internal Security Specialist"
+*)
+```
+
+* Using the `Faker<T>` class with mutable classes in **F#**:
+
+```fsharp
+open Bogus
 type Customer() =
   member val FirstName = "" with get, set
   member val LastName = "" with get, set
@@ -553,7 +632,7 @@ faker.Generate() |> Dump |> ignore
 ```
 
 #### The Very Basic VB.NET Example
-```
+```visualbasic
 Imports Bogus
 
 Public Class Customer

@@ -1,13 +1,17 @@
-using Bogus.DataSets;
+﻿using Bogus.DataSets;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Bogus.Tests.DataSetTests
 {
    public class AddressTest : SeededTest
    {
-      public AddressTest()
+      private readonly ITestOutputHelper console;
+
+      public AddressTest(ITestOutputHelper console)
       {
+         this.console = console;
          address = new Address();
       }
 
@@ -59,6 +63,12 @@ namespace Bogus.Tests.DataSetTests
       public void can_get_a_random_country_code()
       {
          address.CountryCode().Should().Be("MQ");
+      }
+
+      [Fact]
+      public void can_get_a_random_country_code_alpha3()
+      {
+         address.CountryCode(Iso3166Format.Alpha3).Should().Be("MNP");
       }
 
       [Fact]

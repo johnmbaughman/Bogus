@@ -107,7 +107,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Returns a random even number
+      /// Returns a random odd number
       /// </summary>
       /// <param name="min">Lower bound, inclusive</param>
       /// <param name="max">Upper bound, inclusive</param>
@@ -281,11 +281,76 @@ namespace Bogus
          return arr;
       }
 
+      /// <summary>
+      /// Get a string of characters of a specific length. Uses <seealso cref="Chars"/>.
+      /// </summary>
+      /// <param name="length">The exact length of the result string. If null, a random length is chosen between 40 and 80.</param>
+      /// <param name="minChar">Min character value, default char.MinValue</param>
+      /// <param name="maxChar">Max character value, default char.MaxValue</param>
+      public string String(int? length = null, char minChar = char.MinValue, char maxChar = char.MaxValue)
+      {
+         var l = length ?? this.Number(40, 80);
+
+         return new string(Chars(minChar, maxChar, l));
+      }
+
+      /// <summary>
+      /// Get a string of characters between <paramref name="minLength" /> and <paramref name="maxLength"/>. Uses <seealso cref="Chars"/>.
+      /// </summary>
+      /// <param name="minLength">Lower-bound string length. Inclusive.</param>
+      /// <param name="maxLength">Upper-bound string length. Inclusive.</param>
+      /// <param name="minChar">Min character value, default char.MinValue</param>
+      /// <param name="maxChar">Max character value, default char.MaxValue</param>
+      public string String(int minLength, int maxLength, char minChar = char.MinValue, char maxChar = char.MaxValue)
+      {
+         var length = this.Number(minLength, maxLength);
+         return String(length, minChar, maxChar);
+      }
+
+      /// <summary>
+      /// Get a string of characters with a specific length drawing characters from <paramref name="chars"/>.
+      /// The returned string may contain repeating characters from the <paramref name="chars"/> string.
+      /// </summary>
+      /// <param name="length">The length of the string to return.</param>
+      /// <param name="chars">The pool of characters to draw from. The returned string may contain repeat characters from the pool.</param>
+      public string String2(int length, string chars = "abcdefghijklmnopqrstuvwxyz")
+      {
+         var target = new char[length];
+
+         for (int i = 0; i < length; i++)
+         {
+            var idx = this.Number(0, chars.Length - 1);
+            target[i] = chars[idx];
+         }
+
+         return new string(target);
+      }
+      /// <summary>
+      /// Get a string of characters with a specific length drawing characters from <paramref name="chars"/>.
+      /// The returned string may contain repeating characters from the <paramref name="chars"/> string.
+      /// </summary>
+      /// <param name="minLength">The minimum length of the string to return.</param>
+      /// <param name="maxLength">The maximum length of the string to return.</param>
+      /// <param name="chars">The pool of characters to draw from. The returned string may contain repeat characters from the pool.</param>
+      public string String2(int minLength, int maxLength, string chars = "abcdefghijklmnopqrstuvwxyz")
+      {
+         var length = this.Number(minLength, maxLength);
+         return String2(length, chars);
+      }
+
+      /// <summary>
+      /// Return a random hex hash. Default 40 characters, aka SHA-1.
+      /// </summary>
+      /// <param name="length">The length of the hash string. Default, 40 characters, aka SHA-1.</param>
+      /// <param name="upperCase">Returns the hex string with uppercase characters.</param>
+      public string Hash(int length = 40, bool upperCase = false)
+      {
+         return String2(length, upperCase ? Bogus.Chars.HexUpperCase : Bogus.Chars.HexLowerCase);
+      }
 
       /// <summary>
       /// Get a random boolean
       /// </summary>
-      /// <returns></returns>
       public bool Bool()
       {
          return Number() == 0;
@@ -472,7 +537,7 @@ namespace Bogus
       /// </summary>
       /// <typeparam name="T">Must be an Enum</typeparam>
       /// <param name="exclude">Exclude enum values from being returned</param>
-      public T Enum<T>(params T[] exclude) where T : struct
+      public T Enum<T>(params T[] exclude) where T : struct, Enum
       {
          var e = typeof(T);
          if( !e.IsEnum() )
@@ -493,8 +558,7 @@ namespace Bogus
 
          var val = this.ArrayElement(selection);
 
-         T picked;
-         System.Enum.TryParse(val, out picked);
+         System.Enum.TryParse(val, out T picked);
          return picked;
       }
 
@@ -594,10 +658,10 @@ namespace Bogus
       /// <summary>
       /// Returns a random set of alpha numeric characters 0-9, a-z
       /// </summary>
-      public string AlphaNumeric(int count)
+      public string AlphaNumeric(int length)
       {
          var sb = new StringBuilder();
-         return Enumerable.Range(1, count).Aggregate(sb, (b, i) => b.Append(ArrayElement(AlphaChars)), b => b.ToString());
+         return Enumerable.Range(1, length).Aggregate(sb, (b, i) => b.Append(ArrayElement(AlphaChars)), b => b.ToString());
       }
 
       private static char[] HexChars =

@@ -1,5 +1,61 @@
-## v21.0.3
-* Fixed `f.Image` category in URL generation.
+## v22.1.2
+* Improved XML documentation comments on `Faker[T]` API.
+
+## v22.1.1
+* PR 144: Argument support for mustache handlebars. Example: `{{name.firstname(Male)}}`
+* Using **C# 7.3** generic `Enum` constraints for methods that only accept enums. Example: `f.PickRandom<Enum>()`.
+
+## v22.0.9
+* Issue 143: Fixed rare case when `f.IndexGlobal` could be zero twice at start of generation.
+* Fixed typo in XML docs.
+
+## v22.0.8
+* New `Company.Ein()` to generate employer identification numbers.
+* Preparing release of extended data sets for Bogus.
+
+## v22.0.7
+* New `Internet.Color()` format options: CSS `rgb(...)` and delimited RGB.
+* New `System.AndroidId()` to generate GCM registration ID.
+* New `System.ApplePushToken()` to generate a random Apple Push Token.
+* New `System.BlackBerryPin()` to generate a random Black Berry PIN.
+* New `Randomizer.Hash()` to generate random hashes of specified length.
+* New `Randomizer.String2()` to generate random strings with specified character sets.
+
+## v22.0.6
+* Added `Randomizer.String` method to generate strings. Uses `Chars()` method.
+* PR 136: Improve speed of `DataSet.ParseTokens()`. Thanks @danij!
+
+## v22.0.5
+* Bogus now throws exceptions for locales it doesn't recognize. Improves developer experience.
+* New extension method `.ToBogusLocale()` on `System.Globalization.CultureInfo` to help translate from **.NET** locale codes to **Bogus** locale codes.
+
+## v22.0.3 
+* Generate more realistic Bitcoin addresses.
+* New extension method `Faker<T>.GenerateBetween(min, max)` that generates N objects between `min` and `max`. Located in `Bogus.Extensions`. N should be considered non-deterministic but technically depends on the parameters each time this extension method was called. 
+* Added `Lorem.Paragraphs(min, max)` overload.
+* Added improved XML doc comments and parameter names on `Lorem.Paragraph`.
+* UK extension method `.ShortCode()` renamed to `.SortCode()` as originally intended.
+* Marked `DataSet.Get/.GetObject/BObject` methods as `protected internal`. Reducing API surface noise.
+* Added new `.OrNull` in `Bogus.Extensions` to help create randomly null values. Example: `.RuleFor(x=>x.Prop, f=>f.Random.Word().OrNull(f))`.
+* New groundwork for extending Bogus with premium (paid) data sets and tooling.
+
+## v22.0.2
+* Issue 121: Fixes the inability to `.Ignore(...)` a property or field after a rule had already been set.
+
+## v22.0.1
+* Issue 120: `.Generate(n)` now returns `List<T>` instead of `IList<T>`.
+* Added `f.Address.CountryCode()` ISO 3166-1 alpha-3 country code generator.
+* New `Bogus.Extensions.Extras` namespace for generally useful helper methods.
+* Added `Finance.CreditCardNumberObfuscated()` extension to `Bogus.Extensions.Extras` namespace.
+* Moved credit card `CheckDigit()` extensions to `Bogus.Extensions.Extras` namespace. 
+
+## v21.0.5
+* Better error support.
+* Added `Person.FullName` field.
+* Allowed `Faker<T>.FinishWith` to be called multiple times. Last call wins.
+
+## v21.0.4
+* Fixed `f.Image` URL generation.
 
 ## v21.0.2 
 * Re-enabled **.NET Standard 1.3** targeting.

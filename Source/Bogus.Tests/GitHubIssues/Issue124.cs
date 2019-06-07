@@ -90,7 +90,7 @@ namespace Bogus.Tests.GitHubIssues
       }
 
       [Fact]
-      public void test_deterministic_ornull()
+      public void test_deterministic_or_null()
       {
          var faker = new Faker<Foo>()
             .RuleFor(x => x.Id, f => f.Random.Uuid())
@@ -106,16 +106,17 @@ namespace Bogus.Tests.GitHubIssues
 
          bars.Should()
             .ContainInOrder(
-               null,
                notNullObjects[0],
+               null,
+               null,
                notNullObjects[1],
                null,
                notNullObjects[2],
-               null,
-               null,
                notNullObjects[3],
-               notNullObjects[4],
-               null);
+               null,
+               null,
+               notNullObjects[4]
+               );
       }
 
       public class Foo

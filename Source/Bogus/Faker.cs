@@ -22,10 +22,10 @@ namespace Bogus
       public Faker(string locale = "en")
       {
          Locale = locale;
-         
+
          this.Address = this.Notifier.Flow(new Address(locale));
          this.Company = this.Notifier.Flow(new Company(locale));
-         this.Date = this.Notifier.Flow(new Date {Locale = locale});
+         this.Date = this.Notifier.Flow(new Date (locale));
          this.Finance = this.Notifier.Flow(new Finance {Locale = locale});
          this.Hacker = this.Notifier.Flow(new Hacker(locale));
          this.Image = this.Notifier.Flow(new Images(locale));
@@ -38,6 +38,7 @@ namespace Bogus
          this.Commerce = this.Notifier.Flow(new Commerce(locale));
          this.Database = this.Notifier.Flow(new DataSets.Database());
          this.Rant = this.Notifier.Flow(new Rant());
+         this.Vehicle = this.Notifier.Flow(new Vehicle());
 
          this.Hashids = new Hashids();
       }
@@ -184,6 +185,11 @@ namespace Bogus
       [RegisterMustasheMethods]
       public Rant Rant { get; set; }
 
+      /// <summary>
+      /// Generates data related to vehicles.
+      /// </summary>
+      [RegisterMustasheMethods]
+      public Vehicle Vehicle { get; set; }
 
       /// <summary>
       /// Helper method to pick a random element.

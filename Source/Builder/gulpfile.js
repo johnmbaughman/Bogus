@@ -10,7 +10,12 @@ var BSON = require("bson");
 
 var es = require("event-stream");
 
-var localeFolders = gulp.src(["../fakerjs/lib/locales/*"]);
+var localeFolders = gulp.src(
+   [
+      "../fakerjs/lib/locales/*",
+      "!../fakerjs/lib/locales/ar" // 2018.09.23 - Exclude this locale, has problems upstream.
+                                   // https://github.com/Marak/faker.js/pull/505/files#r219737439
+   ]);
 
 var dataFolder = "../Bogus/data";
 var dataExtendFolder = "../Bogus/data_extend";
@@ -35,6 +40,8 @@ gulp.task("import.locales.json", function () {
 
          ensureAllArraysAreStrings(locale);
 
+         specializeLocale(locale, localeCode);
+
          var destName = localeCode + ".locale.json";
          log2(destName);
          var bogusLocale = {};
@@ -42,7 +49,18 @@ gulp.task("import.locales.json", function () {
          var extendPath = path.resolve(dataExtendFolder, destName);
          if (fs.existsSync(extendPath)) {
             var extendData = JSON.parse(fs.readFileSync(extendPath, 'utf8'));
-            bogusLocale = l.merge(locale, extendData);
+
+            // By default, _.merge replaces items in arrays. IE:
+            // _.merge([1,2,3,4], [9,9]) = [9,9,3,4], in our case
+            // data extend locale files should replace the full contents
+            // of the array, not replace items.
+            // https://lodash.com/docs/4.17.10#mergeWith
+            var replacer = (objValue, srcValue) => {
+               if( _.isArray(objValue) ) {
+                  return objValue = srcValue;
+               }
+            };
+            bogusLocale = l.mergeWith(locale, extendData, replacer);
          } else {
             bogusLocale = locale;
          }
@@ -123,6 +141,10 @@ function transformMimeTypes(obj) {
    });
 
    obj["system"]["mimeTypes"] = arr;
+}
+
+function specializeLocale(locale, localeCode) {
+   
 }
 
 

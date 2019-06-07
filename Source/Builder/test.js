@@ -1,6 +1,6 @@
 var faker = require('../fakerjs');
 
-faker.setLocale("az");
-var val = faker.address.state();
+//faker.setLocale("ar");
+var val = faker.vehicle.vin();
 
 console.log(val);

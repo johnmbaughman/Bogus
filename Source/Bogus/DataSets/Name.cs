@@ -19,7 +19,6 @@
       /// <summary>
       /// Default constructor
       /// </summary>
-      /// <param name="locale"></param>
       public Name(string locale = "en") : base(locale)
       {
          SupportsGenderFirstNames = HasKey("male_first_name", false) && HasKey("female_first_name", false);
@@ -31,8 +30,6 @@
       /// <summary>
       /// Switches locale
       /// </summary>
-      /// <param name="switchLocale"></param>
-      /// <returns></returns>
       public Name this[string switchLocale] => new Name(switchLocale);
 
       /// <summary>
@@ -80,6 +77,15 @@
       /// <param name="gender">Gender of the name if supported by the locale.</param>
       public string FullName(Gender? gender = null)
       {
+         // PR#148 - 'ru' locale requires a gender to be
+         // specified for both first and last name. Gender is not
+         // picked when 'en' locale is specified because
+         // SupportsGenderLastNames = false when 'en' is used.
+         // SupportsGenderLastNames is false because 'en' doesn't have
+         // en: male_last_name and en: female_last_name JSON fields.
+         if ( SupportsGenderFirstNames && SupportsGenderLastNames )
+           gender = gender ?? this.Random.Enum<Gender>();
+
          return $"{FirstName(gender)} {LastName(gender)}";
       }
 
@@ -157,7 +163,6 @@
       /// <summary>
       /// Get a job area expertise.
       /// </summary>
-      /// <returns></returns>
       public string JobArea()
       {
          return GetRandomArrayItem("title.level");

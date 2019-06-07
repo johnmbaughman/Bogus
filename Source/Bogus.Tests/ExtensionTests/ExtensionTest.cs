@@ -1,7 +1,7 @@
 ﻿using Bogus.DataSets;
-using Bogus.Extensions;
 using Bogus.Extensions.UnitedKingdom;
 using Bogus.Extensions.Italy;
+using Bogus.Extensions.Portugal;
 using FluentAssertions;
 using System;
 using Xunit;
@@ -16,6 +16,24 @@ namespace Bogus.Tests.ExtensionTests
             var f = new Finance();
             f.SortCode().Should().Be("61-86-06");
             f.SortCode(false).Should().Be("064391");
+        }
+
+        [Fact]
+        public void can_create_nino()
+        {
+            var f = new Finance();
+            var nino = f.Nino(false);
+            var regex = @"^[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z][0-9]{2}[0-9]{2}[0-9]{2}[ABCD]";
+            nino.Should().MatchRegex(regex);
+        }
+
+        [Fact]
+        public void can_create_separated_nino()
+        {
+           var f = new Finance();
+           var nino = f.Nino();
+           var regex = @"^[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z]\s[0-9]{2}\s[0-9]{2}\s[0-9]{2}\s[ABCD]";
+           nino.Should().MatchRegex(regex);
         }
 
         [Fact]
@@ -109,7 +127,7 @@ namespace Bogus.Tests.ExtensionTests
         }
 
         [Fact]
-        public void more_than_three_consonants_in_firstname_are_squeezed()
+        public void more_than_three_consonants_in_first_name_are_squeezed()
         {
             var f = new Faker("it");
             var person = f.Person;
@@ -122,7 +140,7 @@ namespace Bogus.Tests.ExtensionTests
         }
 
         [Fact]
-        public void more_than_three_consonants_in_lastname_are_squeezed()
+        public void more_than_three_consonants_in_last_name_are_squeezed()
         {
             var f = new Faker("it");
             var person = f.Person;
@@ -234,5 +252,34 @@ namespace Bogus.Tests.ExtensionTests
 
             codiceFiscale.Should().StartWith("RSSMRA90D23");
         }
-    }
+       [Fact]
+       public void nif_generator_for_person()
+       {
+          //Arrange
+          var regex = @"^[0-9]{9}$";
+          var f = new Faker("pt_PT");
+          var person = f.Person;
+
+          //Act
+          var nifNumber = person.Nif();
+
+          //Assert
+          nifNumber.Should().MatchRegex(regex).And.HaveLength(9).And.Match(p => p.Substring(0, 1) == "1" || p.Substring(0, 1) == "2");
+       }
+
+       [Fact]
+       public void nif_generator_for_company()
+       {
+          //Arrange
+          var regex = @"^[0-9]{9}$";
+          var f = new Faker("pt_PT");
+          var company = f.Company;
+
+          //Act
+          var nipcNumber = company.Nipc();
+
+          //Assert
+          nipcNumber.Should().MatchRegex(regex).And.HaveLength(9).And.Match(p => p.Substring(0, 1) == "5" || p.Substring(0, 1) == "6" || p.Substring(0, 1) == "8" || p.Substring(0, 1) == "9");
+       }
+   }
 }

@@ -105,7 +105,7 @@ namespace Bogus.Tests.DataSetTests
       public void can_get_canadian_zip_code()
       {
          var a = new Address("en_CA");
-         a.ZipCode().Should().Be("C8Q 0Q0");
+         a.ZipCode().Should().Be("N1V 6A6");
       }
 
       [Fact]
@@ -123,7 +123,7 @@ namespace Bogus.Tests.DataSetTests
       [Fact]
       public void can_get_a_street_name()
       {
-         address.StreetName().Should().Be("Brown Stravenue");
+         address.StreetName().Should().Be("Brekke Stravenue");
       }
 
       [Fact]
@@ -154,7 +154,7 @@ namespace Bogus.Tests.DataSetTests
       }
 
       [Fact]
-      public void can_generate_an_ordnial_direction()
+      public void can_generate_an_ordinal_direction()
       {
          address.OrdinalDirection().Should().Be("Southeast");
          address.OrdinalDirection(true).Should().Be("NE");

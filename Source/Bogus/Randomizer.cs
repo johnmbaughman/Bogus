@@ -10,7 +10,7 @@ using Bogus.Platform;
 namespace Bogus
 {
    /// <summary>
-   /// The randomizer. It randoms things.
+   /// A randomizer that randomizes things.
    /// </summary>
    public class Randomizer
    {
@@ -36,7 +36,6 @@ namespace Bogus
       /// Constructor that uses <see cref="localSeed"/> parameter as a seed.
       /// Completely ignores the global static <see cref="Seed"/>.
       /// </summary>
-      /// <param name="localSeed"></param>
       public Randomizer(int localSeed)
       {
          this.localSeed = new Random(localSeed);
@@ -48,19 +47,17 @@ namespace Bogus
       /// Get an int from 0 to max.
       /// </summary>
       /// <param name="max">Upper bound, inclusive. Only int.MaxValue is exclusive.</param>
-      /// <returns></returns>
       public int Number(int max)
       {
          return Number(0, max);
       }
 
       /// <summary>
-      /// Get a random sequence of digits
+      /// Get a random sequence of digits.
       /// </summary>
       /// <param name="count">How many</param>
       /// <param name="minDigit">minimum digit, inclusive</param>
       /// <param name="maxDigit">maximum digit, inclusive</param>
-      /// <returns></returns>
       public int[] Digits(int count, int minDigit = 0, int maxDigit = 9)
       {
          if( maxDigit > 9 || maxDigit < 0 ) throw new ArgumentException(nameof(maxDigit), "max digit can't be lager than 9 or smaller than 0");
@@ -79,7 +76,6 @@ namespace Bogus
       /// </summary>
       /// <param name="min">Lower bound, inclusive</param>
       /// <param name="max">Upper bound, inclusive. Only int.MaxValue is exclusive.</param>
-      /// <returns></returns>
       public int Number(int min = 0, int max = 1)
       {
          //lock any seed access, for thread safety.
@@ -92,7 +88,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Returns a random even number
+      /// Returns a random even number.
       /// </summary>
       /// <param name="min">Lower bound, inclusive</param>
       /// <param name="max">Upper bound, inclusive</param>
@@ -107,7 +103,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Returns a random odd number
+      /// Returns a random odd number.
       /// </summary>
       /// <param name="min">Lower bound, inclusive</param>
       /// <param name="max">Upper bound, inclusive</param>
@@ -143,7 +139,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Get a random decimal, between 0.0 and 1.0
+      /// Get a random decimal, between 0.0 and 1.0.
       /// </summary>
       /// <param name="min">Minimum, default 0.0</param>
       /// <param name="max">Maximum, default 1.0</param>
@@ -153,7 +149,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Get a random float, between 0.0 and 1.0
+      /// Get a random float, between 0.0 and 1.0.
       /// </summary>
       /// <param name="min">Minimum, default 0.0</param>
       /// <param name="max">Maximum, default 1.0</param>
@@ -282,7 +278,10 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Get a string of characters of a specific length. Uses <seealso cref="Chars"/>.
+      /// Get a string of characters of a specific length.
+      /// Uses <seealso cref="Chars"/>.
+      /// Note: This method can return ill-formed UTF16 Unicode strings with unpaired surrogates.
+      /// Use <seealso cref="Utf16String"/> for technically valid Unicode.
       /// </summary>
       /// <param name="length">The exact length of the result string. If null, a random length is chosen between 40 and 80.</param>
       /// <param name="minChar">Min character value, default char.MinValue</param>
@@ -295,7 +294,10 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Get a string of characters between <paramref name="minLength" /> and <paramref name="maxLength"/>. Uses <seealso cref="Chars"/>.
+      /// Get a string of characters between <paramref name="minLength" /> and <paramref name="maxLength"/>.
+      /// Uses <seealso cref="Chars"/>.
+      /// Note: This method can return ill-formed UTF16 Unicode strings with unpaired surrogates.
+      /// Use <seealso cref="Utf16String"/> for technically valid Unicode.
       /// </summary>
       /// <param name="minLength">Lower-bound string length. Inclusive.</param>
       /// <param name="maxLength">Upper-bound string length. Inclusive.</param>
@@ -325,6 +327,7 @@ namespace Bogus
 
          return new string(target);
       }
+
       /// <summary>
       /// Get a string of characters with a specific length drawing characters from <paramref name="chars"/>.
       /// The returned string may contain repeating characters from the <paramref name="chars"/> string.
@@ -339,6 +342,55 @@ namespace Bogus
       }
 
       /// <summary>
+      /// Get a string of valid UTF16 Unicode characters.
+      /// This method returns a string where each character IsLetterOrDigit() is true.
+      /// </summary>
+      /// <param name="minLength">The minimum length of the string to return.</param>
+      /// <param name="maxLength">The maximum length of the string to return.</param>
+      /// <param name="excludeSurrogates">Excludes surrogate pairs from the returned string.</param>
+      public string Utf16String(int minLength = 40, int maxLength = 80, bool excludeSurrogates = false)
+      {
+         var targetLength = minLength == maxLength ? minLength : this.Number(minLength, maxLength);
+
+         var sb = new StringBuilder();
+
+         while( sb.Length < targetLength)
+         {
+            int spaceLeft = targetLength - sb.Length;
+            string block = null;
+            int alignment = 0;
+
+            if (!excludeSurrogates && spaceLeft >= 2 && this.Bool())
+            {
+               block = this.ArrayElement(SafeUnicodeRanges.SurrogatePairs);
+               alignment = 1;
+            }
+            else
+            {
+               block = this.ArrayElement(SafeUnicodeRanges.Basic);
+               alignment = 0;
+            }
+
+            char rangeStart = block[alignment];
+            char rangeEnd = block[2 + alignment * 2];
+
+            char pickedChar = (char)this.UShort(rangeStart, rangeEnd);
+
+            if (alignment == 1)
+            {
+               sb.Append(block[0]);
+               sb.Append(pickedChar);
+            }
+            else
+            {
+               sb.Append(pickedChar);
+            }
+         }
+
+         return sb.ToString();
+      }
+
+      /// <summary>
       /// Return a random hex hash. Default 40 characters, aka SHA-1.
       /// </summary>
       /// <param name="length">The length of the hash string. Default, 40 characters, aka SHA-1.</param>
@@ -349,7 +401,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Get a random boolean
+      /// Get a random boolean.
       /// </summary>
       public bool Bool()
       {
@@ -357,7 +409,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Get a random boolean
+      /// Get a random boolean.
       /// </summary>
       /// <param name="weight">The probability of true. Ranges from 0 to 1.</param>
       public bool Bool(float weight)
@@ -462,7 +514,8 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Replaces symbols with numbers. IE: ### -> 283
+      /// Replaces symbols with numbers.
+      /// IE: ### -> 283
       /// </summary>
       /// <param name="format">The string format</param>
       /// <param name="symbol">The symbol to search for in format that will be replaced with a number</param>
@@ -472,7 +525,8 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Replaces each character instance in a string. Func is called each time a symbol is encountered.
+      /// Replaces each character instance in a string.
+      /// Func is called each time a symbol is encountered.
       /// </summary>
       /// <param name="format">The string with symbols to replace.</param>
       /// <param name="symbol">The symbol to search for in the string.</param>
@@ -484,9 +538,9 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Replaces symbols with numbers and letters. # = number, ? = letter, * = number or letter. IE: ###???* -> 283QED4. Letters are uppercase.
+      /// Replaces symbols with numbers and letters. # = number, ? = letter, * = number or letter.
+      /// IE: ###???* -> 283QED4. Letters are uppercase.
       /// </summary>
-      /// <param name="format"></param>
       public string Replace(string format)
       {
          var chars = format.Select(c =>
@@ -512,7 +566,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Clamps the length of a string filling between min and max characters.
+      /// Clamps the length of a string between min and max characters.
       /// If the string is below the minimum, the string is appended with random characters up to the minimum length.
       /// If the string is over the maximum, the string is truncated at maximum characters; additionally, if the result string ends with
       /// whitespace, it is replaced with a random characters.
@@ -609,7 +663,7 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Get a range of words in an array (English)
+      /// Get a range of words in an array (English).
       /// </summary>
       /// <param name="min">Minimum word count.</param>
       /// <param name="max">Maximum word count.</param>
@@ -630,7 +684,16 @@ namespace Bogus
       }
 
       /// <summary>
-      /// Get a random unique GUID.
+      /// Get a random GUID.
+      /// </summary>
+      public Guid Guid()
+      {
+         var guidBytes = this.Bytes(16);
+         return new Guid(guidBytes);
+      }
+
+      /// <summary>
+      /// Get a random GUID. Alias for Randomizer.Guid().
       /// </summary>
       public Guid Uuid()
       {
@@ -656,7 +719,7 @@ namespace Bogus
          };
 
       /// <summary>
-      /// Returns a random set of alpha numeric characters 0-9, a-z
+      /// Returns a random set of alpha numeric characters 0-9, a-z.
       /// </summary>
       public string AlphaNumeric(int length)
       {
@@ -681,10 +744,10 @@ namespace Bogus
 
       //items are weighted by the decimal probability in their value
       /// <summary>
-      /// Returns a selection of T[] based on a weighted distribution of probability
+      /// Returns a selection of T[] based on a weighted distribution of probability.
       /// </summary>
       /// <param name="items">Items to draw the selection from.</param>
-      /// <param name="weights">Weights in decimal form: ie:[.25, .50, .25] for total of 3 items. Should add up to 1.</param>
+      /// <param name="weights">Weights in decimal form: IE:[.25, .50, .25] for total of 3 items. Should add up to 1.</param>
       public T WeightedRandom<T>(T[] items, float[] weights)
       {
          if( weights.Length != items.Length ) throw new ArgumentOutOfRangeException($"{nameof(items)}.Length and {nameof(weights)}.Length must be the same.");
@@ -736,12 +799,12 @@ namespace Bogus
       /// </summary>
       public WordFunctions(Randomizer r)
       {
-         this.Commerce = new Commerce() {Random = r};
-         this.Company = new Company() {Random = r};
-         this.Address = new Address() {Random = r};
-         this.Finance = new Finance() {Random = r};
-         this.Hacker = new Hacker() {Random = r};
-         this.Name = new Name() {Random = r};
+         this.Commerce = new Commerce {Random = r};
+         this.Company = new Company {Random = r};
+         this.Address = new Address {Random = r};
+         this.Finance = new Finance {Random = r};
+         this.Hacker = new Hacker {Random = r};
+         this.Name = new Name {Random = r};
 
          Init();
       }

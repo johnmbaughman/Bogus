@@ -28,6 +28,7 @@ namespace Bogus
          public string Street;
          public string Suite;
          public string City;
+         public string State;
          public string ZipCode;
          public CardGeo Geo;
       }
@@ -46,9 +47,21 @@ namespace Bogus
       protected Address DsAddress { get; set; }
       protected Company DsCompany { get; set; }
 
-      public Person(string locale = "en")
+      /// <summary>
+      /// Creates a new Person object.
+      /// </summary>
+      /// <param name="locale">The locale to use. Defaults to 'en'.</param>
+      /// <param name="seed">The seed used to generate person data. When a <paramref name="seed"/> is specified,
+      /// the Randomizer.Seed global static is ignored and a locally isolated derived seed is used to derive randomness.
+      /// However, if the <paramref name="seed"/> parameter is null, then the Randomizer.Seed global static is used to derive randomness.
+      /// </param>
+      public Person(string locale = "en", int? seed = null)
       {
          this.GetDataSources(locale);
+         if( seed.HasValue )
+         {
+            this.Random = new Randomizer(seed.Value);
+         }
          this.Populate();
       }
 
@@ -81,7 +94,7 @@ namespace Bogus
          this.Website = this.DsInternet.DomainName();
          this.Avatar = this.DsInternet.Avatar();
 
-         this.DateOfBirth = this.DsDate.Past(50, DateTime.Now.AddYears(-20));
+         this.DateOfBirth = this.DsDate.Past(50, Date.SystemClock().AddYears(-20));
 
          this.Phone = this.DsPhoneNumbers.PhoneNumber();
 
@@ -90,6 +103,7 @@ namespace Bogus
                Street = this.DsAddress.StreetAddress(),
                Suite = this.DsAddress.SecondaryAddress(),
                City = this.DsAddress.City(),
+               State = this.DsAddress.State(),
                ZipCode = this.DsAddress.ZipCode(),
                Geo = new CardAddress.CardGeo
                   {

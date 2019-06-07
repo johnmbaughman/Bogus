@@ -6,7 +6,6 @@
     <Version>0.0.0-localbuild</Version>
     <Authors>Brian Chavez</Authors>
     <TargetFrameworks>net40;netstandard1.3;netstandard2.0</TargetFrameworks>
-    <LangVersion>7.3</LangVersion>
     <CodeAnalysisRuleSet>Bogus.ruleset</CodeAnalysisRuleSet>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyOriginatorKeyFile>
@@ -14,20 +13,17 @@
     <SignAssembly>false</SignAssembly>
     <AssemblyName>Bogus</AssemblyName>
     <PackageId>Bogus</PackageId>
-    <PackageTags>fake;bogus;poco;data;generator;database;seed;values;test-data;test;data;tdd;testing;faker;.net;EF</PackageTags>
+    <PackageTags>faker;fake;bogus;poco;data;generator;database;seed;values;test-data;test;data;tdd;testing;.net;EF</PackageTags>
     <PackageIconUrl>https://raw.githubusercontent.com/bchavez/Bogus/master/Docs/logo.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/bchavez/Bogus</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/bchavez/Bogus/master/LICENSE</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/bchavez/Bogus</RepositoryUrl>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
-    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!--Source Link Settings-->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>false</EmbedUntrackedSources>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <DefineConstants>$(DefineConstants);STANDARD;STANDARD20</DefineConstants>
@@ -39,7 +35,8 @@
     <EmbeddedResource Include="data\*.locale.bson" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Roslynator.Analyzers" Version="1.5.0" PrivateAssets="All" />
+    <PackageReference Include="Roslynator.Analyzers" Version="1.9.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
     <Reference Include="System" />

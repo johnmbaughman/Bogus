@@ -6,7 +6,7 @@ namespace Bogus.Premium
 {
    public static class ContextHelper
    {
-      public static T GetOrSet<T>(string key, Faker f, Func<T> factory) where T : DataSet, new()
+      public static T GetOrSet<T>(string key, Faker f, Func<T> factory) where T : DataSet
       {
          var context = (f as IHasContext).Context;
 
@@ -23,9 +23,9 @@ namespace Bogus.Premium
          return dataset;
       }
 
-      public static T GetOrSet<T>(Faker f, Func<T> factory) where T : DataSet, new()
+      public static T GetOrSet<T>(Faker f, Func<T> factory) where T : DataSet
       {
-         var key = typeof(T).Name.ToLower();
+         var key = typeof(T).Name.ToLowerInvariant();
          return GetOrSet($"__{key}", f, factory);
       }
    }

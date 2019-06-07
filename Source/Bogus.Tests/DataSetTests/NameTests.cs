@@ -136,7 +136,17 @@ namespace Bogus.Tests.DataSetTests
       [Fact]
       public void can_get_a_full_name()
       {
-         name.FullName().Should().Be("Lee Brown");
+         name.FullName().Should().Be("Lee Brekke");
+      }
+
+      [Fact]
+      public void full_name_component_genders_should_match()
+      {
+         var n = new Name("ru")
+            {
+               Random = new Randomizer(31337)
+            };
+         n.FullName().Should().Be("Людмила Тетерина");
       }
 
       [Fact]

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Bogus.Bson;
-using Bogus.Extensions;
 using Bogus.Extensions.Extras;
 
 namespace Bogus.DataSets
@@ -28,7 +28,7 @@ namespace Bogus.DataSets
       /// </summary>
       public string Symbol { get; set; }
 
-      public static Currency Default = new Currency {Description = "US Dollar", Code = "USD", Symbol = "$"};
+      public static Currency Default = new Currency { Description = "US Dollar", Code = "USD", Symbol = "$" };
    }
 
    /// <summary>
@@ -114,8 +114,7 @@ namespace Bogus.DataSets
       /// <summary>
       /// Get an account number. Default length is 8 digits.
       /// </summary>
-      /// <param name="length"></param>
-      /// <returns></returns>
+      /// <param name="length">The length of the account number.</param>
       public string Account(int length = 8)
       {
          var template = new string('#', length);
@@ -125,7 +124,6 @@ namespace Bogus.DataSets
       /// <summary>
       /// Get an account name. Like "savings", "checking", "Home Loan" etc..
       /// </summary>
-      /// <returns></returns>
       public string AccountName()
       {
          var type = GetRandomArrayItem("account_type");
@@ -138,7 +136,6 @@ namespace Bogus.DataSets
       /// <param name="min">Min value. Default 0.</param>
       /// <param name="max">Max value. Default 1000.</param>
       /// <param name="decimals">Decimal places. Default 2.</param>
-      /// <returns></returns>
       public decimal Amount(decimal min = 0, decimal max = 1000, int decimals = 2)
       {
          var amount = (max - min);
@@ -150,7 +147,6 @@ namespace Bogus.DataSets
       /// <summary>
       /// Get a transaction type: "deposit", "withdrawal", "payment", or "invoice".
       /// </summary>
-      /// <returns></returns>
       public string TransactionType()
       {
          return GetRandomArrayItem("transaction_type");
@@ -159,27 +155,26 @@ namespace Bogus.DataSets
       /// <summary>
       /// Get a random currency.
       /// </summary>
-      /// <returns></returns>
       public Currency Currency(bool includeFundCodes = false)
       {
          var obj = this.GetRandomBObject("currency");
 
          var cur = new Currency
-            {
-               Description = obj["name"],
-               Code = obj["code"],
-               Symbol = obj["symbol"],
-            };
+         {
+            Description = obj["name"],
+            Code = obj["code"],
+            Symbol = obj["symbol"],
+         };
 
          // GitHub Issue #80:
          // Make sure we exclude currency fund codes by default unless
          // the user wants them. See:
          //https://github.com/bchavez/Bogus/issues/80
 
-         if( cur.Code.Contains(" ") )
+         if (cur.Code.Contains(" "))
          {
             // We selected a currency fund code. Check if the user wants it.
-            if( includeFundCodes )
+            if (includeFundCodes)
             {
                cur.Code = cur.Code.Split(' ')[1];
                return cur;
@@ -198,7 +193,7 @@ namespace Bogus.DataSets
       /// <param name="provider">The type of credit card to generate (ie: American Express, Discover, etc.). Passing null, a random card provider will be chosen.</param>
       public string CreditCardNumber(CardType provider = null)
       {
-         if( provider is null )
+         if (provider is null)
          {
             provider = this.Random.ListItem(CardType.All);
          }
@@ -223,12 +218,12 @@ namespace Bogus.DataSets
             var RANGE_REG = new Regex(@"\[(\d+)\-(\d+)\]");
             int min, max, tmp, repetitions;
             var token = RANGE_REP_REG.Match(str);
-            while( token.Success )
+            while (token.Success)
             {
                min = Int32.Parse(token.Groups[2].Value);
                max = Int32.Parse(token.Groups[3].Value);
 
-               if( min > max )
+               if (min > max)
                {
                   tmp = max;
                   max = min;
@@ -245,7 +240,7 @@ namespace Bogus.DataSets
             }
             // Deal with repeat `{num}`
             token = REP_REG.Match(str);
-            while( token.Success )
+            while (token.Success)
             {
                repetitions = Int32.Parse(token.Groups[2].Value);
 
@@ -259,12 +254,12 @@ namespace Bogus.DataSets
             //TODO: implement for letters e.g. [0-9a-zA-Z] etc.
 
             token = RANGE_REG.Match(str);
-            while( token.Success )
+            while (token.Success)
             {
-               min = Int32.Parse(token.Groups[1].Value); // This time we are not capturing the char befor `[]`
+               min = Int32.Parse(token.Groups[1].Value); // This time we are not capturing the char before `[]`
                max = Int32.Parse(token.Groups[2].Value);
                // switch min and max
-               if( min > max )
+               if (min > max)
                {
                   tmp = max;
                   max = min;
@@ -300,8 +295,8 @@ namespace Bogus.DataSets
       public string BitcoinAddress()
       {
          var addressLength = this.Random.Number(25, 34);
-         var lastBits = new string(this.Random.ArrayElements(BtcCharset,addressLength));
-         if( this.Random.Bool() )
+         var lastBits = new string(this.Random.ArrayElements(BtcCharset, addressLength));
+         if (this.Random.Bool())
          {
             return $"1{lastBits}";
          }
@@ -324,7 +319,7 @@ namespace Bogus.DataSets
          var digits = this.Random.Digits(8);
 
          var sum = 0;
-         for( var i = 0; i < digits.Length; i += 3 )
+         for (var i = 0; i < digits.Length; i += 3)
          {
             sum += 3 * digits.ElementAt(i);
             sum += 7 * digits.ElementAt(i + 1);
@@ -336,7 +331,7 @@ namespace Bogus.DataSets
          return digits.Aggregate("", (str, digit) => str + digit, str => str + checkDigit);
       }
 
-      private static readonly string[] BicVowels = {"A", "E", "I", "O", "U"};
+      private static readonly string[] BicVowels = { "A", "E", "I", "O", "U" };
 
       /// <summary>
       /// Generates Bank Identifier Code (BIC) code.
@@ -354,63 +349,62 @@ namespace Bogus.DataSets
       /// <summary>
       /// Generates an International Bank Account Number (IBAN).
       /// </summary>
-      /// <param name="formatted"></param>
-      /// <returns></returns>
       public string Iban(bool formatted = false)
       {
          var ibanFormat = this.RandomIbanFormat();
-         var s = "";
+         var stringBuilder = new StringBuilder();
          var count = 0;
-         for( var b = 0; b < ibanFormat.Bban.Length; b++ )
+         for (var b = 0; b < ibanFormat.Bban.Length; b++)
          {
             var bban = ibanFormat.Bban[b];
             var c = bban.Count;
             count += bban.Count;
-            while( c > 0 )
+            while (c > 0)
             {
-               if( bban.Type == "a" )
+               if (bban.Type == "a")
                {
-                  s += this.Random.ArrayElement(IbanAlpha);
+                  stringBuilder.Append(this.Random.ArrayElement(IbanAlpha));
                }
-               else if( bban.Type == "c" )
+               else if (bban.Type == "c")
                {
-                  if( this.Random.Number(100) < 80 )
+                  if (this.Random.Number(100) < 80)
                   {
-                     s += this.Random.Number(9);
+                     stringBuilder.Append(this.Random.Number(9));
                   }
                   else
                   {
-                     s += this.Random.ArrayElement(IbanAlpha);
+                     stringBuilder.Append(this.Random.ArrayElement(IbanAlpha));
                   }
                }
                else
                {
-                  if( c >= 3 && this.Random.Number(100) < 30 )
+                  if (c >= 3 && this.Random.Number(100) < 30)
                   {
-                     if( this.Random.Bool() )
+                     if (this.Random.Bool())
                      {
-                        s += this.Random.ArrayElement(IbanPattern100);
+                        stringBuilder.Append(this.Random.ArrayElement(IbanPattern100));
                         c -= 2;
                      }
                      else
                      {
-                        s += this.Random.ArrayElement(IbanPattern10);
+                        stringBuilder.Append(this.Random.ArrayElement(IbanPattern10));
                         c--;
                      }
                   }
                   else
                   {
-                     s += this.Random.Number(9);
+                     stringBuilder.Append(this.Random.Number(9));
                   }
                }
                c--;
             }
-            s = s.Substring(0, count);
-         }
-         var checksum = 98 - IbanMod97(IbanToDigitString(s + ibanFormat.Country + "00"));
-         var iban = ibanFormat.Country + checksum.ToString("00") + s;
 
-         if( formatted )
+            stringBuilder = stringBuilder.Remove(count, stringBuilder.Length - count);
+         }
+         var checksum = 98 - IbanMod97(IbanToDigitString(stringBuilder + ibanFormat.Country + "00"));
+         var iban = ibanFormat.Country + checksum.ToString("00") + stringBuilder;
+
+         if (formatted)
          {
             var matches = Regex.Matches(iban, ".{1,4}");
             var array = matches.OfType<Match>()
@@ -424,7 +418,7 @@ namespace Bogus.DataSets
       private int IbanMod97(string digitStr)
       {
          var m = 0;
-         for( int i = 0; i < digitStr.Length; i++ )
+         for (int i = 0; i < digitStr.Length; i++)
          {
             m = ((m * 10) + (digitStr[i] - '0')) % 97;
          }
@@ -458,12 +452,12 @@ namespace Bogus.DataSets
          var bbitems = GetBbanItems(obj);
 
          return new IBanFormat
-            {
-               Country = obj["country"].StringValue,
-               Total = obj["total"].Int32Value,
-               Format = obj["format"].StringValue,
-               Bban = bbitems
-            };
+         {
+            Country = obj["country"].StringValue,
+            Total = obj["total"].Int32Value,
+            Format = obj["format"].StringValue,
+            Bban = bbitems
+         };
       }
 
       private IBanFormat.BbanItem[] GetBbanItems(BObject obj)
@@ -471,19 +465,19 @@ namespace Bogus.DataSets
          var arr = obj["bban"] as BArray;
          return arr.OfType<BObject>()
             .Select(o => new IBanFormat.BbanItem
-               {
-                  Count = o["count"].Int32Value,
-                  Type = o["type"].StringValue
-               })
+            {
+               Count = o["count"].Int32Value,
+               Type = o["type"].StringValue
+            })
             .ToArray();
       }
 
       private static readonly string[] IbanAlpha =
             {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
 
-      private static readonly string[] IbanPattern10 = {"01", "02", "03", "04", "05", "06", "07", "08", "09"};
+      private static readonly string[] IbanPattern10 = { "01", "02", "03", "04", "05", "06", "07", "08", "09" };
 
-      private static readonly string[] IbanPattern100 = {"001", "002", "003", "004", "005", "006", "007", "008", "009"};
+      private static readonly string[] IbanPattern100 = { "001", "002", "003", "004", "005", "006", "007", "008", "009" };
 
       private static readonly string[] IbanIso3166 =
          {

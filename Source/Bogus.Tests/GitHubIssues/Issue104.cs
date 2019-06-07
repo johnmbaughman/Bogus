@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Bogus.Tests.Models;
 using FluentAssertions;
@@ -23,7 +22,7 @@ namespace Bogus.Tests.GitHubIssues
       }
 
       [Fact]
-      public void without_derrived_faker()
+      public void without_derived_faker()
       {
          var rootSeed = 0;
          var faker1 = new Faker<Order>()

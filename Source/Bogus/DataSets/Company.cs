@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Bogus.Bson;
 
@@ -15,9 +14,9 @@ namespace Bogus.DataSets
       protected Name Name = null;
 
       /// <summary>
-      /// Default constructor
+      /// Initializes a new instance of the <see cref="Company"/> class.
       /// </summary>
-      /// <param name="locale"></param>
+      /// <param name="locale">The locale used to generate the values.</param>
       public Company(string locale = "en") : base(locale)
       {
          this.Name = this.Notifier.Flow(new Name(locale));
@@ -26,16 +25,17 @@ namespace Bogus.DataSets
       /// <summary>
       /// Get a company suffix. "Inc" and "LLC" etc.
       /// </summary>
-      /// <returns></returns>
+      /// <returns>A random company suffix.</returns>
       public string CompanySuffix()
       {
-         return Random.ArrayElement(Suffexes());
+         return Random.ArrayElement(Suffixes());
       }
 
       /// <summary>
       /// Get a company name.
       /// </summary>
       /// <param name="formatIndex">0: name + suffix, 1: name-name, 2: name, name and name."</param>
+      /// <returns>A random company name.</returns>
       public string CompanyName(int? formatIndex = null)
       {
          var formats = new[]
@@ -53,6 +53,7 @@ namespace Bogus.DataSets
       /// Get a company name. The format can use any name.* and company.* methods.
       /// </summary>
       /// <param name="format">Example: "{{name.lastName}} {{company.companySuffix}}"</param>
+      /// <returns>A random company name in the given format.</returns>
       public string CompanyName(string format)
       {
          return Tokenizer.Parse(format, this, this.Name);
@@ -62,7 +63,7 @@ namespace Bogus.DataSets
       /// <summary>
       /// Get a company catch phrase.
       /// </summary>
-      /// <returns></returns>
+      /// <returns>A random company catch phrase.</returns>
       public string CatchPhrase()
       {
          return $"{CatchPhraseAdjective()} {CatchPhraseDescriptor()} {CatchPhraseNoun()}";
@@ -71,14 +72,14 @@ namespace Bogus.DataSets
       /// <summary>
       /// Get a company BS phrase.
       /// </summary>
-      /// <returns></returns>
+      /// <returns>A random company BS phrase.</returns>
       public string Bs()
       {
          return $"{BsBuzz()} {BsAdjective()} {BsNoun()}";
       }
 
 #pragma warning disable 1591
-      internal protected virtual string[] Suffexes()
+      internal protected virtual string[] Suffixes()
       {
          return GetArray("suffix").OfType<BValue>().Select(s => s.StringValue).ToArray();
       }
